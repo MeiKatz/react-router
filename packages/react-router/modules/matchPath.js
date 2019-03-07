@@ -50,35 +50,53 @@ const compilePath = (pattern, options) => {
  * Public API for matching a URL pathname to a path pattern.
  */
 const matchPath = (pathname, options = {}, parent) => {
-  if (typeof options === "string") options = { path: options };
+  if (typeof options === "string") {
+    options = { path: options };
+  }
 
   const { exact = false, strict = false, sensitive = false } = options;
-  let path = options.path != null ? options.path : options.from;
+  let path = (
+    options.path != null
+    ? options.path
+    : options.from
+  );
 
-  if (path == null) return parent;
+  if (path == null) {
+    return parent;
+  }
 
   const absolute = isAbsolute(path);
 
-  if (!absolute) path = resolvePath(path, parent && parent.url);
+  if (!absolute) {
+    path = resolvePath(path, parent && parent.url);
+  }
 
   const { re, keys } = compilePath(path, { end: exact, strict, sensitive });
   const match = re.exec(pathname);
 
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
-  const [url, ...values] = match;
+  const [ url, ...values ] = match;
   const isExact = pathname === url;
 
-  if (exact && !isExact) return null;
+  if (exact && !isExact) {
+    return null;
+  }
 
   const matchParams = keys.reduce((params, key, index) => {
     params[key.name] = values[index];
     return params;
   }, {});
 
-  const params = absolute
+  const parentParams = (parent && parent.params) || {};
+
+  const params = (
+    absolute
     ? matchParams
-    : { ...(parent && parent.params), ...matchParams };
+    : { ...parentParams, ...matchParams }
+  );
 
   return {
     path, // the path pattern used to match
