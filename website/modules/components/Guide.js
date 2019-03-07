@@ -2,12 +2,15 @@ import React from "react";
 import PropTypes from "prop-types";
 import { Redirect, Route } from "react-router-dom";
 import { Block } from "jsxstyle";
+
 import ScrollToDoc from "./ScrollToDoc";
 import MarkdownViewer from "./MarkdownViewer";
 
 // almost identical to `API`, but I'm lazy rn
-const Guide = ({ match, data }) => {
-  const { params: { mod, header: headerParam, environment } } = match;
+function Guide({ match, data }) {
+  const {
+    params: { mod, header: headerParam, environment }
+  } = match;
   const doc = data.guides.find(doc => mod === doc.title.slug);
   const header =
     doc && headerParam ? doc.headers.find(h => h.slug === headerParam) : null;
@@ -21,7 +24,11 @@ const Guide = ({ match, data }) => {
       </Block>
       <Route
         path={`${match.path}/:header`}
-        render={({ match: { params: { header: slug } } }) => {
+        render={({
+          match: {
+            params: { header: slug }
+          }
+        }) => {
           const header = doc.headers.find(h => h.slug === slug);
           return header ? (
             <ScrollToDoc doc={doc} header={header} />
@@ -32,7 +39,7 @@ const Guide = ({ match, data }) => {
       />
     </Block>
   );
-};
+}
 
 Guide.propTypes = {
   match: PropTypes.object,

@@ -1,8 +1,9 @@
 import React, { Component } from "react";
+import { Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
+
 import WebExample from "./WebExample";
 import NativeExample from "./NativeExample";
-import { Redirect } from "react-router-dom";
 
 class Example extends Component {
   static propTypes = {
@@ -18,7 +19,9 @@ class Example extends Component {
   render() {
     const {
       data,
-      match: { params: { example: exampleParam, environment } }
+      match: {
+        params: { example: exampleParam, environment }
+      }
     } = this.props;
     const example = data.examples.find(e => e.slug === exampleParam);
     const isNative = environment === "native";

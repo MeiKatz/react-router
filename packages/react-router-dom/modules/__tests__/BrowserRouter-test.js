@@ -1,43 +1,26 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
-import BrowserRouter from "../BrowserRouter";
+import { BrowserRouter } from "react-router-dom";
+
+import renderStrict from "./utils/renderStrict";
 
 describe("A <BrowserRouter>", () => {
-  it("puts history on context.router", () => {
-    let history;
-    const ContextChecker = (props, context) => {
-      history = context.router.history;
-      return null;
-    };
+  const node = document.createElement("div");
 
-    ContextChecker.contextTypes = {
-      router: PropTypes.object.isRequired
-    };
-
-    const node = document.createElement("div");
-
-    ReactDOM.render(
-      <BrowserRouter>
-        <ContextChecker />
-      </BrowserRouter>,
-      node
-    );
-
-    expect(typeof history).toBe("object");
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node);
   });
 
-  it("warns when passed a history prop", () => {
-    const history = {};
-    const node = document.createElement("div");
+  describe("with a `history` prop", () => {
+    it("logs a warning to the console", () => {
+      jest.spyOn(console, "warn").mockImplementation(() => {});
 
-    spyOn(console, "error");
+      const history = {};
+      renderStrict(<BrowserRouter history={history} />, node);
 
-    ReactDOM.render(<BrowserRouter history={history} />, node);
-
-    expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining("<BrowserRouter> ignores the history prop")
-    );
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("<BrowserRouter> ignores the history prop")
+      );
+    });
   });
 });

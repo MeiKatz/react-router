@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import warning from "warning";
+import warning from "tiny-warning";
 
 import RouterContext from "./RouterContext";
 
@@ -12,52 +12,55 @@ class Router extends React.Component {
     return { path: "/", url: "/", params: {}, isExact: pathname === "/" };
   }
 
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
-  };
+  constructor(props) {
+    super(props);
 
-  getChildContext() {
-    return {
-      router: {
-        history: this.props.history,
-        route: {
-          location: this.state.location,
-          match: Router.computeRootMatch(this.state.location.pathname)
-        },
-        staticContext: this.props.staticContext
-      }
+    this.state = {
+      location: props.history.location
     };
+
+    // This is a bit of a hack. We have to start listening for location
+    // changes here in the constructor in case there are any <Redirect>s
+    // on the initial render. If there are, they will replace/push when
+    // they mount and since cDM fires in children before parents, we may
+    // get a new location before the <Router> is mounted.
+    this._isMounted = false;
+    this._pendingLocation = null;
+
+    if (!props.staticContext) {
+      this.unlisten = props.history.listen(location => {
+        if (this._isMounted) {
+          this.setState({ location });
+        } else {
+          this._pendingLocation = location;
+        }
+      });
+    }
   }
 
-  state = {
-    location: this.props.history.location
-  };
+  componentDidMount() {
+    this._isMounted = true;
 
-  componentWillMount() {
-    // Do this here so we can setState when a <Redirect> changes the
-    // location in componentWillMount. This happens e.g. when doing
-    // server rendering using a <StaticRouter>.
-    this.unlisten = this.props.history.listen(location => {
-      this.setState({ location });
-    });
-  }
-
-  componentWillReceiveProps(nextProps) {
-    warning(
-      this.props.history === nextProps.history,
-      "You cannot change <Router history>"
-    );
+    if (this._pendingLocation) {
+      this.setState({ location: this._pendingLocation });
+    }
   }
 
   componentWillUnmount() {
-    this.unlisten();
+    if (this.unlisten) this.unlisten();
   }
 
   render() {
     return (
-      <RouterContext.Provider value={this.getChildContext().router}>
-        {this.props.children || null}
-      </RouterContext.Provider>
+      <RouterContext.Provider
+        children={this.props.children || null}
+        value={{
+          history: this.props.history,
+          location: this.state.location,
+          match: Router.computeRootMatch(this.state.location.pathname),
+          staticContext: this.props.staticContext
+        }}
+      />
     );
   }
 }
@@ -67,6 +70,13 @@ if (__DEV__) {
     children: PropTypes.node,
     history: PropTypes.object.isRequired,
     staticContext: PropTypes.object
+  };
+
+  Router.prototype.componentDidUpdate = function(prevProps) {
+    warning(
+      prevProps.history === this.props.history,
+      "You cannot change <Router history>"
+    );
   };
 }
 

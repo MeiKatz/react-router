@@ -1,4 +1,4 @@
-import matchPath from "../matchPath";
+import { matchPath } from "react-router";
 
 describe("matchPath", () => {
   describe('with path="/"', () => {
@@ -29,6 +29,36 @@ describe("matchPath", () => {
       const path = "/somewhere";
       const pathname = "/somewhere/else";
       const match = matchPath(pathname, path);
+      expect(match.url).toBe("/somewhere");
+    });
+  });
+
+  describe("with an array of paths", () => {
+    it('return the correct url at "/elsewhere"', () => {
+      const path = ["/somewhere", "/elsewhere"];
+      const pathname = "/elsewhere";
+      const match = matchPath(pathname, { path });
+      expect(match.url).toBe("/elsewhere");
+    });
+
+    it('returns correct url at "/elsewhere/else"', () => {
+      const path = ["/somewhere", "/elsewhere"];
+      const pathname = "/elsewhere/else";
+      const match = matchPath(pathname, { path });
+      expect(match.url).toBe("/elsewhere");
+    });
+
+    it('returns correct url at "/elsewhere/else" with path "/" in array', () => {
+      const path = ["/somewhere", "/"];
+      const pathname = "/elsewhere/else";
+      const match = matchPath(pathname, { path });
+      expect(match.url).toBe("/");
+    });
+
+    it('returns correct url at "/somewhere" with path "/" in array', () => {
+      const path = ["/somewhere", "/"];
+      const pathname = "/somewhere";
+      const match = matchPath(pathname, { path });
       expect(match.url).toBe("/somewhere");
     });
   });

@@ -1,25 +1,25 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { createLocation, createPath } from "history";
-import invariant from "invariant";
-import warning from "warning";
+import invariant from "tiny-invariant";
+import warning from "tiny-warning";
 
 import Router from "./Router";
 
-const addLeadingSlash = path => {
+function addLeadingSlash(path) {
   return path.charAt(0) === "/" ? path : "/" + path;
-};
+}
 
-const addBasename = (basename, location) => {
+function addBasename(basename, location) {
   if (!basename) return location;
 
   return {
     ...location,
     pathname: addLeadingSlash(basename) + location.pathname
   };
-};
+}
 
-const stripBasename = (basename, location) => {
+function stripBasename(basename, location) {
   if (!basename) return location;
 
   const base = addLeadingSlash(basename);
@@ -30,16 +30,19 @@ const stripBasename = (basename, location) => {
     ...location,
     pathname: location.pathname.substr(base.length)
   };
-};
+}
 
-const createURL = location =>
-  typeof location === "string" ? location : createPath(location);
+function createURL(location) {
+  return typeof location === "string" ? location : createPath(location);
+}
 
-const staticHandler = methodName => () => {
-  invariant(false, "You cannot %s with <StaticRouter>", methodName);
-};
+function staticHandler(methodName) {
+  return () => {
+    invariant(false, "You cannot %s with <StaticRouter>", methodName);
+  };
+}
 
-const noop = () => {};
+function noop() {}
 
 /**
  * The public top-level API for a "static" <Router>, so-called because it
@@ -48,44 +51,23 @@ const noop = () => {};
  * server-rendering scenarios.
  */
 class StaticRouter extends React.Component {
-  static defaultProps = {
-    basename: "",
-    location: "/"
-  };
-
-  createHref = path => addLeadingSlash(this.props.basename + createURL(path));
-
-  handlePush = location => {
-    const { basename, context } = this.props;
-    context.action = "PUSH";
+  navigateTo(location, action) {
+    const { basename = "", context } = this.props;
+    context.action = action;
     context.location = addBasename(basename, createLocation(location));
     context.url = createURL(context.location);
-  };
-
-  handleReplace = location => {
-    const { basename, context } = this.props;
-    context.action = "REPLACE";
-    context.location = addBasename(basename, createLocation(location));
-    context.url = createURL(context.location);
-  };
-
-  handleListen = () => noop;
-
-  handleBlock = () => noop;
-
-  componentWillMount() {
-    warning(
-      !this.props.history,
-      "<StaticRouter> ignores the history prop. To use a custom history, " +
-        "use `import { Router }` instead of `import { StaticRouter as Router }`."
-    );
   }
 
+  handlePush = location => this.navigateTo(location, "PUSH");
+  handleReplace = location => this.navigateTo(location, "REPLACE");
+  handleListen = () => noop;
+  handleBlock = () => noop;
+
   render() {
-    const { basename, context, location, ...props } = this.props;
+    const { basename = "", context = {}, location = "/", ...rest } = this.props;
 
     const history = {
-      createHref: this.createHref,
+      createHref: path => addLeadingSlash(basename + createURL(path)),
       action: "POP",
       location: stripBasename(basename, createLocation(location)),
       push: this.handlePush,
@@ -97,17 +79,23 @@ class StaticRouter extends React.Component {
       block: this.handleBlock
     };
 
-    return (
-      <Router {...props} history={history} staticContext={this.props.context} />
-    );
+    return <Router {...rest} history={history} staticContext={context} />;
   }
 }
 
 if (__DEV__) {
   StaticRouter.propTypes = {
     basename: PropTypes.string,
-    context: PropTypes.object.isRequired,
+    context: PropTypes.object,
     location: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  };
+
+  StaticRouter.prototype.componentDidMount = function() {
+    warning(
+      !this.props.history,
+      "<StaticRouter> ignores the history prop. To use a custom history, " +
+        "use `import { Router }` instead of `import { StaticRouter as Router }`."
+    );
   };
 }
 

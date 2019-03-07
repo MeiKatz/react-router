@@ -3,46 +3,46 @@ import PropTypes from "prop-types";
 import { Block, Flex } from "jsxstyle";
 
 import subscribeToMailingList from "../utils/subscribeToMailingList";
-import { RED } from "../Theme";
 import SmallScreen from "./SmallScreen";
+import { RED } from "../Theme";
 
-const Button = ({ children, ...props }) => (
-  <Block
-    component="button"
-    color="#fff"
-    padding="15px 10px"
-    background={RED}
-    borderRadius={0}
-    cursor="pointer"
-    border="none"
-    textShadow="none"
-    minWidth="80px"
-    children={children}
-    {...props}
-  />
-);
+function Button({ children, ...props }) {
+  return (
+    <Block
+      component="button"
+      color="#fff"
+      padding="15px 10px"
+      background={RED}
+      borderRadius={0}
+      cursor="pointer"
+      border="none"
+      textShadow="none"
+      minWidth="80px"
+      children={children}
+      {...props}
+    />
+  );
+}
 
-Button.propTypes = {
-  children: PropTypes.node
-};
+Button.propTypes = { children: PropTypes.node };
 
-const Input = ({ margin, ...props }) => (
-  <Block
-    component="input"
-    padding="10px 8px"
-    border="1px solid #d6d6d6"
-    borderRadius="0"
-    backgroundColor="white"
-    height="42px"
-    flex="1"
-    props={props}
-    margin={margin}
-  />
-);
+function Input({ margin, ...props }) {
+  return (
+    <Block
+      component="input"
+      padding="10px 8px"
+      border="1px solid #d6d6d6"
+      borderRadius="0"
+      backgroundColor="white"
+      height="42px"
+      flex="1"
+      props={props}
+      margin={margin}
+    />
+  );
+}
 
-Input.propTypes = {
-  margin: PropTypes.any
-};
+Input.propTypes = { margin: PropTypes.any };
 
 class MailingListSignup extends Component {
   state = { email: "", submitted: false };
@@ -71,7 +71,7 @@ class MailingListSignup extends Component {
           >
             {submitted ? (
               <Block textAlign="center">
-                <p>Thanks! You've been added to the list.</p>
+                <p>Thanks! You've been added to our list.</p>
                 <p style={{ marginTop: 10 }}>
                   <a
                     style={{ textDecoration: "underline", cursor: "pointer" }}
@@ -96,7 +96,8 @@ class MailingListSignup extends Component {
                     style={{ textDecoration: "underline" }}
                   >
                     our React workshops
-                  </a>, and more:
+                  </a>
+                  , and more:
                 </Block>
                 <form onSubmit={this.handleSubmit}>
                   <Flex

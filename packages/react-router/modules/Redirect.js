@@ -1,108 +1,66 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { createLocation, locationsAreEqual } from "history";
-import invariant from "invariant";
-import warning from "warning";
+import invariant from "tiny-invariant";
 
+import Lifecycle from "./Lifecycle";
 import RouterContext from "./RouterContext";
 import generatePath from "./generatePath";
 
 /**
- * The public API for updating the location programmatically
- * with a component.
+ * The public API for navigating programmatically with a component.
  */
-class InnerRedirect extends React.Component {
-  static defaultProps = {
-    push: false
-  };
+function Redirect({ computedMatch, to, push = false }) {
+  return (
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <Redirect> outside a <Router>");
 
-  isStatic() {
-    return this.props.router && this.props.router.staticContext;
-  }
+        const { history, staticContext } = context;
 
-  componentWillMount() {
-    invariant(
-      this.props.router,
-      "You should not use <Redirect> outside a <Router>"
-    );
+        const method = push ? history.push : history.replace;
+        const location = createLocation(
+          computedMatch
+            ? typeof to === "string"
+              ? generatePath(to, computedMatch.params)
+              : {
+                  ...to,
+                  pathname: generatePath(to.pathname, computedMatch.params)
+                }
+            : to
+        );
 
-    if (this.isStatic()) this.perform();
-  }
+        // When rendering in a static context,
+        // set the new location immediately.
+        if (staticContext) {
+          method(location);
+          return null;
+        }
 
-  componentDidMount() {
-    if (!this.isStatic()) this.perform();
-  }
-
-  componentDidUpdate(prevProps) {
-    const prevTo = createLocation(prevProps.to);
-    const nextTo = createLocation(this.props.to);
-
-    if (locationsAreEqual(prevTo, nextTo)) {
-      warning(
-        false,
-        `You tried to redirect to the same route you're currently on: ` +
-          `"${nextTo.pathname}${nextTo.search}"`
-      );
-      return;
-    }
-
-    this.perform();
-  }
-
-  computeTo({ computedMatch, to }) {
-    if (computedMatch) {
-      if (typeof to === "string") {
-        return generatePath(to, computedMatch.params);
-      } else {
-        return {
-          ...to,
-          pathname: generatePath(to.pathname, computedMatch.params)
-        };
-      }
-    }
-
-    return to;
-  }
-
-  perform() {
-    const {
-      push,
-      router: { history }
-    } = this.props;
-    const to = this.computeTo(this.props);
-
-    if (push) {
-      history.push(to);
-    } else {
-      history.replace(to);
-    }
-  }
-
-  render() {
-    return null;
-  }
+        return (
+          <Lifecycle
+            onMount={() => {
+              method(location);
+            }}
+            onUpdate={(self, prevProps) => {
+              if (!locationsAreEqual(prevProps.to, location)) {
+                method(location);
+              }
+            }}
+            to={to}
+          />
+        );
+      }}
+    </RouterContext.Consumer>
+  );
 }
 
 if (__DEV__) {
-  InnerRedirect.propTypes = {
-    computedMatch: PropTypes.object, // private, from <Switch>
+  Redirect.propTypes = {
     push: PropTypes.bool,
     from: PropTypes.string,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired,
-      staticContext: PropTypes.object
-    }).isRequired
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired
   };
 }
-
-const Redirect = props => (
-  <RouterContext.Consumer>
-    {router => <InnerRedirect {...props} router={router} />}
-  </RouterContext.Consumer>
-);
 
 export default Redirect;

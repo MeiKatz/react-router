@@ -1,18 +1,23 @@
 {
-  "private": true,
   "name": "react-router-packages",
+  "private": true,
   "scripts": {
-    "postinstall": "node ./scripts/postinstall.js",
     "build": "node ./scripts/build.js",
-    "clean": "lerna run clean",
-    "precommit": "pretty-quick --staged",
-    "start": "cd website && npm start",
-    "test": "lerna run test --stream"
+    "clean": "git clean -fdX .",
+    "postinstall": "node ./scripts/postinstall.js",
+    "start": "node ./scripts/start.js",
+    "test": "node ./scripts/test.js"
   },
   "devDependencies": {
-    "husky": "^0.14.3",
-    "lerna": "^2.11.0",
-    "prettier": "^1.12.1",
+    "husky": "^1.1.3",
+    "lerna": "^3.13.0",
+    "prettier": "^1.14.3",
     "pretty-quick": "^1.4.1"
+  },
+  "dependencies": {},
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   }
 }

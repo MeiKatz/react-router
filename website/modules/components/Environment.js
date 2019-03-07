@@ -1,12 +1,13 @@
 import React, { Component } from "react";
+import { Redirect } from "react-router-dom";
+import { Block } from "jsxstyle";
 import PropTypes from "prop-types";
+
 import EnvironmentLarge from "./EnvironmentLarge";
 import EnvironmentSmall from "./EnvironmentSmall";
 import Bundle from "./Bundle";
-import { Block } from "jsxstyle";
 import SmallScreen from "./SmallScreen";
 import Loading from "./Loading";
-import { Redirect } from "react-router-dom";
 
 const envData = {
   web: require("bundle-loader?lazy!../docs/Web"),
@@ -38,7 +39,9 @@ class Environment extends Component {
       history,
       location,
       match,
-      match: { params: { environment } }
+      match: {
+        params: { environment }
+      }
     } = this.props;
     if (!envData[environment]) {
       return <Redirect to="/" />;

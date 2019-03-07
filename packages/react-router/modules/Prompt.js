@@ -1,74 +1,52 @@
 import React from "react";
 import PropTypes from "prop-types";
-import invariant from "invariant";
+import invariant from "tiny-invariant";
 
+import Lifecycle from "./Lifecycle";
 import RouterContext from "./RouterContext";
 
 /**
- * The public API for prompting the user before navigating away
- * from a screen with a component.
+ * The public API for prompting the user before navigating away from a screen.
  */
-class InnerPrompt extends React.Component {
-  static defaultProps = {
-    when: true
-  };
+function Prompt({ message, when = true }) {
+  return (
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <Prompt> outside a <Router>");
 
-  enable(message) {
-    if (this.unblock) this.unblock();
+        if (!when || context.staticContext) return null;
 
-    this.unblock = this.props.router.history.block(message);
-  }
+        const method = context.history.block;
 
-  disable() {
-    if (this.unblock) {
-      this.unblock();
-      this.unblock = null;
-    }
-  }
-
-  componentWillMount() {
-    invariant(
-      this.props.router,
-      "You should not use <Prompt> outside a <Router>"
-    );
-
-    if (this.props.when) this.enable(this.props.message);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.when) {
-      if (!this.props.when || this.props.message !== nextProps.message)
-        this.enable(nextProps.message);
-    } else {
-      this.disable();
-    }
-  }
-
-  componentWillUnmount() {
-    this.disable();
-  }
-
-  render() {
-    return null;
-  }
+        return (
+          <Lifecycle
+            onMount={self => {
+              self.release = method(message);
+            }}
+            onUpdate={(self, prevProps) => {
+              if (prevProps.message !== message) {
+                self.release();
+                self.release = method(message);
+              }
+            }}
+            onUnmount={self => {
+              self.release();
+            }}
+            message={message}
+          />
+        );
+      }}
+    </RouterContext.Consumer>
+  );
 }
 
 if (__DEV__) {
-  InnerPrompt.propTypes = {
+  const messageType = PropTypes.oneOfType([PropTypes.func, PropTypes.string]);
+
+  Prompt.propTypes = {
     when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired,
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        block: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
+    message: messageType.isRequired
   };
 }
-
-const Prompt = props => (
-  <RouterContext.Consumer>
-    {router => <InnerPrompt {...props} router={router} />}
-  </RouterContext.Consumer>
-);
 
 export default Prompt;
