@@ -42,7 +42,11 @@ class InnerSwitch extends React.Component {
         match =
           path == null
             ? this.props.router.route.match
-            : matchPath(location.pathname, { ...element.props, path });
+            : matchPath(
+                location.pathname,
+                { ...element.props, path },
+                this.props.router.route.match
+              );
       }
     });
 

@@ -15,7 +15,11 @@ function computeMatch(props, parentRoute) {
 
   return props.path == null
     ? parentRoute.match
-    : matchPath((props.location || parentRoute.location).pathname, props);
+    : matchPath(
+        (props.location || parentRoute.location).pathname,
+        props,
+        parentRoute.match
+      );
 }
 
 /**

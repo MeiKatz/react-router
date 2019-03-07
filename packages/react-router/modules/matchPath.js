@@ -13,6 +13,17 @@ const resolvePath = (pathname, base) => {
     return pathname;
   }
 
+  if (pathname.charAt(0) === ".") {
+    switch (pathname.charAt(1)) {
+      // pathname points to previous segment (../)
+      case ".":
+        throw new Error("cannot resolve pathname with leading dot-dot");
+      // pathname points to current segment (./)
+      case "/":
+        pathname = pathname.substr(2);
+    }
+  }
+
   if (!base) {
     base = "/";
   }
@@ -55,11 +66,7 @@ const matchPath = (pathname, options = {}, parent) => {
   }
 
   const { exact = false, strict = false, sensitive = false } = options;
-  let path = (
-    options.path != null
-    ? options.path
-    : options.from
-  );
+  let path = options.path != null ? options.path : options.from;
 
   if (path == null) {
     return parent;
@@ -78,7 +85,7 @@ const matchPath = (pathname, options = {}, parent) => {
     return null;
   }
 
-  const [ url, ...values ] = match;
+  const [url, ...values] = match;
   const isExact = pathname === url;
 
   if (exact && !isExact) {
@@ -92,11 +99,7 @@ const matchPath = (pathname, options = {}, parent) => {
 
   const parentParams = (parent && parent.params) || {};
 
-  const params = (
-    absolute
-    ? matchParams
-    : { ...parentParams, ...matchParams }
-  );
+  const params = absolute ? matchParams : { ...parentParams, ...matchParams };
 
   return {
     path, // the path pattern used to match
