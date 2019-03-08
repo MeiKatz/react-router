@@ -1,14 +1,18 @@
 import pathToRegexp from "path-to-regexp";
 
-const isAbsolute = pathname => pathname.charAt(0) === "/";
+function isAbsolute(pathname) {
+  return pathname.charAt(0) === "/";
+}
 
-const ensureTrailingSlash = pathname =>
-  hasTrailingSlash(pathname) ? pathname : pathname + "/";
+function ensureTrailingSlash(pathname) {
+  return hasTrailingSlash(pathname) ? pathname : pathname + "/";
+}
 
-const hasTrailingSlash = pathname =>
-  pathname.charAt(pathname.length - 1) === "/";
+function hasTrailingSlash(pathname) {
+  return pathname.charAt(pathname.length - 1) === "/";
+}
 
-const resolvePath = (pathname, base) => {
+function resolvePath(pathname, base) {
   if (pathname === undefined || isAbsolute(pathname)) {
     return pathname;
   }
@@ -33,7 +37,7 @@ const resolvePath = (pathname, base) => {
   } else {
     return `${ensureTrailingSlash(base)}${pathname}`;
   }
-};
+}
 
 const cache = {};
 const cacheLimit = 10000;
@@ -60,7 +64,7 @@ function compilePath(path, options) {
 /**
  * Public API for matching a URL pathname to a path.
  */
-const matchPath = (pathname, options = {}, parent) => {
+function matchPath(pathname, options = {}, parent) {
   if (typeof options === "string") {
     options = { path: options };
   }
@@ -77,13 +81,13 @@ const matchPath = (pathname, options = {}, parent) => {
     if (matched) {
       return matched;
     }
-    
+
     const absolute = isAbsolute(path);
 
     if (!absolute) {
       path = resolvePath(path, parent && parent.url);
     }
-    
+
     const { regexp, keys } = compilePath(path, {
       end: exact,
       strict,
@@ -95,13 +99,13 @@ const matchPath = (pathname, options = {}, parent) => {
       return null;
     }
 
-    const [ url, ...values ] = match;
+    const [url, ...values] = match;
     const isExact = pathname === url;
 
     if (exact && !isExact) {
       return null;
     }
-    
+
     const matchParams = keys.reduce((params, key, index) => {
       params[key.name] = values[index];
       return params;
@@ -109,11 +113,7 @@ const matchPath = (pathname, options = {}, parent) => {
 
     const parentParams = (parent && parent.params) || {};
 
-    const params = (
-      absolute
-      ? matchParams
-      : { ...parentParams, ...matchParams }
-    );
+    const params = absolute ? matchParams : { ...parentParams, ...matchParams };
 
     return {
       path, // the path pattern used to match
